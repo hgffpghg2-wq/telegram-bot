@@ -1,10 +1,8 @@
-import logging
 import os
-import threading
 from flask import Flask
 from telegram import InlineKeyboardButton, InlineKeyboardMarkup, Update
 from telegram.ext import (
-    ApplicationBuilder,
+    Application,
     CallbackQueryHandler,
     CommandHandler,
     ContextTypes,
@@ -12,31 +10,17 @@ from telegram.ext import (
     filters
 )
 
-logging.basicConfig(
-    format="%(asctime)s - %(name)s - %(levelname)s - %(message)s", level=logging.INFO
-)
-logger = logging.getLogger(__name__)
-
-orders_logger = logging.getLogger("orders")
-orders_logger.setLevel(logging.INFO)
-file_handler = logging.FileHandler("orders.log", encoding="utf-8")
-file_handler.setFormatter(logging.Formatter("%(asctime)s - %(message)s"))
-orders_logger.addHandler(file_handler)
-
 TOKEN = "8707859450:AAFpnZIR2jByQbiy-isTTOk04eBbwlL5pis"
 MY_TELEGRAM_ID = 5963495496
 
-# إعداد سيرفر فلاسك لإرضاء رندر
+# 1. إعداد سيرفر فلاسك البسيط لإبقاء الخدمة تعمل
 app_web = Flask(__name__)
 
 @app_web.route('/')
 def home():
     return "Bot is running 24/7!"
 
-def run_flask():
-    port = int(os.environ.get("PORT", 10000))
-    app_web.run(host="0.0.0.0", port=port)
-
+# 2. دوال بوت التليجرام
 async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
     user = update.effective_user
     context.user_data.clear()
@@ -106,7 +90,7 @@ async def button_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
             f"لقد اخترت: *{package_name}*\n\n"
             "✍️ *يرجى كتابة عدد القسائم التي تريد شراءها الآن برقم صحيح (مثال: 7):*"
         )
-        keyboard = [[InlineKeyboardButton("⬅️️ القائمة الرئيسية", callback_data="main_menu")]]
+        keyboard = [[InlineKeyboardButton("⬅ القائمة الرئيسية", callback_data="main_menu")]]
         await query.edit_message_text(text, reply_markup=InlineKeyboardMarkup(keyboard), parse_mode="Markdown")
 
     elif data == "confirm_order":
@@ -187,7 +171,7 @@ async def message_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
     if step == "waiting_quantity":
         text_input = update.message.text.strip() if update.message.text else ""
         if not text_input.isdigit():
-            await update.message.reply_text("⚠️️ يرجى كتابة رقم صحيح فقط للكمية (مثلاً: 7):")
+            await update.message.reply_text("⚠ يرجى كتابة رقم صحيح فقط للكمية (مثلاً: 7):")
             return
         quantity = int(text_input)
         if quantity <= 0:
@@ -243,9 +227,6 @@ async def message_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
             reply_markup=InlineKeyboardMarkup(admin_keyboard),
             parse_mode="Markdown"
         )
-        orders_logger.info(
-            f"نوع الدفع: إلكتروني | المستخدم: {name} ({user_id}, {username}) | الباقة: {package_name} | العدد: {quantity} | المجموع: {total_price} ألف | صورة الوصل: {photo_file_id}"
-        )
         context.user_data.clear()
         return
 
@@ -288,31 +269,18 @@ async def message_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
             reply_markup=InlineKeyboardMarkup(admin_keyboard),
             parse_mode="Markdown"
         )
-        orders_logger.info(
-            f"نوع الدفع: كاش عند الاستلام | المستخدم: {name} ({user_id}, {username}) | الباقة: {package_name} | العدد: {quantity} | المجموع: {total_price} ألف | العنوان: {address_details}"
-        )
         context.user_data.clear()
 
-async def error_handler(update: object, context: ContextTypes.DEFAULT_TYPE):
-    logger.error("❌ حدث خطأ في البوت:", exc_info=context.error)
-
-
-def main():
-    # تشغيل سيرفر الويب في خلفية منفصلة ليعمل رندر بشكل صحيح
-    flask_thread = threading.Thread(target=run_flask)
-    flask_thread.daemon = True
-    flask_thread.start()
-
-    # استخدام الطريقة المتوافقة تماماً مع أحدث إصدارات المكتبة
-    app = ApplicationBuilder().token(TOKEN).build()
-    
-    app.add_error_handler(error_handler)
-    app.add_handler(CommandHandler("start", start))
-    app.add_handler(CallbackQueryHandler(button_handler))
-    app.add_handler(MessageHandler(filters.PHOTO | filters.LOCATION | filters.TEXT & ~filters.COMMAND, message_handler))
-    
-    print("🤖 البوت يعمل الآن بنجاح...")
-    app.run_polling(allowed_updates=Update.ALL_TYPES)
-
 if __name__ == '__main__':
-    main()
+    # 3. تشغيل فلاسك كعملية أساسية على البورت المطلوب في رندر
+    port = int(os.environ.get("PORT", 10000))
+    
+    # ملاحظة: على رندر المجاني، سنشغل البوت مباشرة بطريقة الـ Polling البسيطة
+    # (إذا أردت استقراراً تاماً، تشغيل الـ Bot مباشرة يغني عن تعارض خيوط المعالجة)
+    application = Application.builder().token(TOKEN).build()
+    application.add_handler(CommandHandler("start", start))
+    application.add_handler(CallbackQueryHandler(button_handler))
+    application.add_handler(MessageHandler(filters.PHOTO | filters.LOCATION | filters.TEXT & ~filters.COMMAND, message_handler))
+    
+    print("🤖 البوت يعمل الآن...")
+    application.run_polling(allowed_updates=Update.ALL_TYPES)
