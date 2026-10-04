@@ -1,8 +1,6 @@
 import logging
 import os
-import threading
 from flask import Flask
-import nest_asyncio
 from telegram import InlineKeyboardButton, InlineKeyboardMarkup, Update
 from telegram.ext import (
     ApplicationBuilder,
@@ -12,11 +10,6 @@ from telegram.ext import (
     MessageHandler,
     filters
 )
-from telegram.request import HTTPXRequest
-from telegram.error import NetworkError, TimedOut
-
-# تفعيل مكتبة nest_asyncio للسماح بتشغيل البوت داخل البيئات البرمجية المتداخلة
-nest_asyncio.apply()
 
 logging.basicConfig(
     format="%(asctime)s - %(name)s - %(levelname)s - %(message)s", level=logging.INFO
@@ -32,16 +25,12 @@ orders_logger.addHandler(file_handler)
 TOKEN = "8707859450:AAFpnZIR2jByQbiy-isTTOk04eBbwlL5pis"
 MY_TELEGRAM_ID = 5963495496
 
-# --- إعداد خادم Flask الـويب لمنع مشكلة المهلة على Render ---
+# --- إعداد خادم Flask الـويب لتلبية متطلبات Render ---
 app_web = Flask(__name__)
 
 @app_web.route('/')
 def home():
     return "Bot is running 24/7!"
-
-def run_web():
-    port = int(os.environ.get("PORT", 10000))
-    app_web.run(host="0.0.0.0", port=port)
 # -------------------------------------------------------------
 
 async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
@@ -84,7 +73,7 @@ async def button_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
             [InlineKeyboardButton("🔹 45 ألف (125 ميجا)", callback_data="nat_45")],
             [InlineKeyboardButton("🔹 65 ألف (250 ميجا)", callback_data="nat_65")],
             [InlineKeyboardButton("🔹 100 ألف (500 ميجا)", callback_data="nat_100")],
-            [InlineKeyboardButton("⬅️️ القائمة الرئيسية", callback_data="main_menu")]
+            [InlineKeyboardButton("⬅ القائمة الرئيسية", callback_data="main_menu")]
         ]
         await query.edit_message_text(text, reply_markup=InlineKeyboardMarkup(keyboard), parse_mode="Markdown")
 
@@ -301,25 +290,19 @@ async def message_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
         context.user_data.clear()
 
 async def error_handler(update: object, context: ContextTypes.DEFAULT_TYPE):
-    if isinstance(context.error, (NetworkError, TimedOut)) or "ReadError" in str(context.error):
-        logger.warning("⚠️ حدث انقطاع مؤقت في الشبكة...")
-    else:
-        logger.error("❌ حدث خطأ غير متوقع:", exc_info=context.error)
+    logger.error("❌ حدث خطأ في البوت:", exc_info=context.error)
 
 def main():
-    # --- تشغيل خادم الويب الوهمي في الخلفية (Threading) ---
-    t = threading.Thread(target=run_web)
-    t.daemon = True
-    t.start()
-    # --------------------------------------------------
-
-    custom_request = HTTPXRequest(connect_timeout=30.0, read_timeout=30.0)
-    app = ApplicationBuilder().token(TOKEN).request(custom_request).build()
+    app = ApplicationBuilder().token(TOKEN).build()
     app.add_error_handler(error_handler)
     app.add_handler(CommandHandler("start", start))
     app.add_handler(CallbackQueryHandler(button_handler))
     app.add_handler(MessageHandler(filters.PHOTO | filters.LOCATION | filters.TEXT & ~filters.COMMAND, message_handler))
-    print("🤖 البوت يعمل وخادم الويب يعمل بنجاح...")
+    
+    port = int(os.environ.get("PORT", 10000))
+    print(f"🤖 البوت يعمل على المنفذ {port}...")
+    
+    # تشغيل البوت مباشرة بدون خيوط معقدة
     app.run_polling()
 
 if __name__ == '__main__':
