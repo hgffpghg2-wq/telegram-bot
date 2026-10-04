@@ -1,7 +1,2 @@
-python-telegram-bot>=3.13
-nest_asyncio
+python-telegram-bot==20.8
 flask
-httpx
-urllib3<3.0
-six
-certifi
