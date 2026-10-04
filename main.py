@@ -296,20 +296,23 @@ async def message_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
 async def error_handler(update: object, context: ContextTypes.DEFAULT_TYPE):
     logger.error("❌ حدث خطأ في البوت:", exc_info=context.error)
 
+
 def main():
     # تشغيل سيرفر الويب في خلفية منفصلة ليعمل رندر بشكل صحيح
     flask_thread = threading.Thread(target=run_flask)
     flask_thread.daemon = True
     flask_thread.start()
 
+    # استخدام الطريقة المتوافقة تماماً مع أحدث إصدارات المكتبة
     app = ApplicationBuilder().token(TOKEN).build()
+    
     app.add_error_handler(error_handler)
     app.add_handler(CommandHandler("start", start))
     app.add_handler(CallbackQueryHandler(button_handler))
     app.add_handler(MessageHandler(filters.PHOTO | filters.LOCATION | filters.TEXT & ~filters.COMMAND, message_handler))
     
     print("🤖 البوت يعمل الآن بنجاح...")
-    app.run_polling()
+    app.run_polling(allowed_updates=Update.ALL_TYPES)
 
 if __name__ == '__main__':
     main()
