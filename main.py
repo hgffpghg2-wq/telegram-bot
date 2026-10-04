@@ -1,4 +1,4 @@
-Import logging
+import logging
 import os
 import threading
 from flask import Flask
@@ -32,12 +32,12 @@ orders_logger.addHandler(file_handler)
 TOKEN = "8707859450:AAFpnZIR2jByQbiy-isTTOk04eBbwlL5pis"
 MY_TELEGRAM_ID = 5963495496
 
-# --- إعداد خادم Flask الوهمي لمنع مشكلة المهلة (Timeout) على Render ---
+# --- إعداد خادم Flask الـويب لمنع مشكلة المهلة على Render ---
 app_web = Flask(__name__)
 
 @app_web.route('/')
 def home():
-    return "Bot is running!"
+    return "Bot is running 24/7!"
 
 def run_web():
     port = int(os.environ.get("PORT", 10000))
@@ -84,7 +84,7 @@ async def button_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
             [InlineKeyboardButton("🔹 45 ألف (125 ميجا)", callback_data="nat_45")],
             [InlineKeyboardButton("🔹 65 ألف (250 ميجا)", callback_data="nat_65")],
             [InlineKeyboardButton("🔹 100 ألف (500 ميجا)", callback_data="nat_100")],
-            [InlineKeyboardButton("⬅️ القائمة الرئيسية", callback_data="main_menu")]
+            [InlineKeyboardButton("⬅️️ القائمة الرئيسية", callback_data="main_menu")]
         ]
         await query.edit_message_text(text, reply_markup=InlineKeyboardMarkup(keyboard), parse_mode="Markdown")
 
@@ -323,4 +323,4 @@ def main():
     app.run_polling(close_loop=False)
 
 if __name__ == '__main__':
-    main() 
+    main()
