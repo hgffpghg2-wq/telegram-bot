@@ -307,4 +307,20 @@ def main():
 
 if __name__ == '__main__':
     main()
-# update
+
+def main():
+    # بناء التطبيق بالطريقة الحديثة
+    app = ApplicationBuilder().token(TOKEN).build()
+    
+    app.add_handler(CommandHandler("start", start))
+    app.add_handler(CallbackQueryHandler(button_handler))
+    app.add_handler(MessageHandler(filters.PHOTO | filters.LOCATION | filters.TEXT & ~filters.COMMAND, message_handler))
+    
+    port = int(os.environ.PORT, 10000)
+    print(f"Bot is running on port {port} ...")
+    
+    # التشغيل المباشر بدون Updater لتجنب أي مشاكل
+    app.run_polling()
+
+if __name__ == "__main__":
+    main()
