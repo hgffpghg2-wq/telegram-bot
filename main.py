@@ -25,13 +25,11 @@ orders_logger.addHandler(file_handler)
 TOKEN = "8707859450:AAFpnZIR2jByQbiy-isTTOk04eBbwlL5pis"
 MY_TELEGRAM_ID = 5963495496
 
-# --- إعداد خادم Flask الـويب لتلبية متطلبات Render ---
 app_web = Flask(__name__)
 
 @app_web.route('/')
 def home():
     return "Bot is running 24/7!"
-# -------------------------------------------------------------
 
 async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
     user = update.effective_user
@@ -302,25 +300,7 @@ def main():
     port = int(os.environ.get("PORT", 10000))
     print(f"🤖 البوت يعمل على المنفذ {port}...")
     
-    # تشغيل البوت مباشرة بدون خيوط معقدة
     app.run_polling()
 
 if __name__ == '__main__':
-    main()
-
-def main():
-    # بناء التطبيق بالطريقة الحديثة
-    app = ApplicationBuilder().token(TOKEN).build()
-    
-    app.add_handler(CommandHandler("start", start))
-    app.add_handler(CallbackQueryHandler(button_handler))
-    app.add_handler(MessageHandler(filters.PHOTO | filters.LOCATION | filters.TEXT & ~filters.COMMAND, message_handler))
-    
-    port = int(os.environ.PORT, 10000)
-    print(f"Bot is running on port {port} ...")
-    
-    # التشغيل المباشر بدون Updater لتجنب أي مشاكل
-    app.run_polling()
-
-if __name__ == "__main__":
     main()
