@@ -320,7 +320,7 @@ def main():
     app.add_handler(CallbackQueryHandler(button_handler))
     app.add_handler(MessageHandler(filters.PHOTO | filters.LOCATION | filters.TEXT & ~filters.COMMAND, message_handler))
     print("🤖 البوت يعمل وخادم الويب يعمل بنجاح...")
-    app.run_polling(close_loop=False)
+    app.run_polling()
 
 if __name__ == '__main__':
     main()
