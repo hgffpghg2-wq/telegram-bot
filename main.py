@@ -1,7 +1,7 @@
 import logging
 import os
 from flask import Flask
-from telegram import InlineKeyboardButton, InlineKeyboardMarkup, Update
+from telegram import InlineKeyboardButton, InlineKeyboardMarkup,
 from telegram.ext import (
     ApplicationBuilder,
     CallbackQueryHandler,
