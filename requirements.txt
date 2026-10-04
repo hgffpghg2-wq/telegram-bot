@@ -2,4 +2,6 @@ python-telegram-bot==13.7
 nest_asyncio
 flask
 httpx
-standard-imghdr
+urllib3<2.0
+six
+certifi
