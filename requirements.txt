@@ -1,7 +1,7 @@
-python-telegram-bot>=21.7
+python-telegram-bot>=3.13
 nest_asyncio
 flask
 httpx
-urllib3<2.0
+urllib3<3.0
 six
 certifi
