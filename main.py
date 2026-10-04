@@ -1,4 +1,7 @@
 import logging
+import os
+import threading
+from flask import Flask
 import nest_asyncio
 from telegram import InlineKeyboardButton, InlineKeyboardMarkup, Update
 from telegram.ext import (
@@ -28,6 +31,18 @@ orders_logger.addHandler(file_handler)
 
 TOKEN = "8707859450:AAFpnZIR2jByQbiy-isTTOk04eBbwlL5pis"
 MY_TELEGRAM_ID = 5963495496
+
+# --- إعداد خادم Flask الوهمي لمنع مشكلة المهلة (Timeout) على Render ---
+app_web = Flask(__name__)
+
+@app_web.route('/')
+def home():
+    return "Bot is running!"
+
+def run_web():
+    port = int(os.environ.get("PORT", 10000))
+    app_web.run(host="0.0.0.0", port=port)
+# -------------------------------------------------------------
 
 async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
     user = update.effective_user
@@ -292,13 +307,19 @@ async def error_handler(update: object, context: ContextTypes.DEFAULT_TYPE):
         logger.error("❌ حدث خطأ غير متوقع:", exc_info=context.error)
 
 def main():
+    # --- تشغيل خادم الويب الوهمي في الخلفية (Threading) ---
+    t = threading.Thread(target=run_web)
+    t.daemon = True
+    t.start()
+    # --------------------------------------------------
+
     custom_request = HTTPXRequest(connect_timeout=30.0, read_timeout=30.0)
     app = ApplicationBuilder().token(TOKEN).request(custom_request).build()
     app.add_error_handler(error_handler)
     app.add_handler(CommandHandler("start", start))
     app.add_handler(CallbackQueryHandler(button_handler))
     app.add_handler(MessageHandler(filters.PHOTO | filters.LOCATION | filters.TEXT & ~filters.COMMAND, message_handler))
-    print("🤖 البوت يعمل...")
+    print("🤖 البوت يعمل وخادم الويب يعمل بنجاح...")
     app.run_polling(close_loop=False)
 
 if __name__ == '__main__':
