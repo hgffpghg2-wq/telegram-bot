@@ -1,4 +1,4 @@
-import logging
+Import logging
 import os
 import threading
 from flask import Flask
@@ -37,7 +37,7 @@ app_web = Flask(__name__)
 
 @app_web.route('/')
 def home():
-    return "Bot is running 24/7!"
+    return "Bot is running!"
 
 def run_web():
     port = int(os.environ.get("PORT", 10000))
@@ -111,7 +111,7 @@ async def button_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
         context.user_data["step"] = "waiting_quantity"
         text = (
             f"لقد اخترت: *{package_name}*\n\n"
-            "✍️️ *يرجى كتابة عدد القسائم التي تريد شراءها الآن برقم صحيح (مثال: 7):*"
+            "✍️ *يرجى كتابة عدد القسائم التي تريد شراءها الآن برقم صحيح (مثال: 7):*"
         )
         keyboard = [[InlineKeyboardButton("⬅️ القائمة الرئيسية", callback_data="main_menu")]]
         await query.edit_message_text(text, reply_markup=InlineKeyboardMarkup(keyboard), parse_mode="Markdown")
@@ -194,11 +194,11 @@ async def message_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
     if step == "waiting_quantity":
         text_input = update.message.text.strip() if update.message.text else ""
         if not text_input.isdigit():
-            await update.message.reply_text("⚠️️ يرجى كتابة رقم صحيح فقط للكمية (مثلاً: 7):")
+            await update.message.reply_text("⚠️ يرجى كتابة رقم صحيح فقط للكمية (مثلاً: 7):")
             return
         quantity = int(text_input)
         if quantity <= 0:
-            await update.message.reply_text("⚠️️ يرجى إدخال عدد أكبر من الصفر:")
+            await update.message.reply_text("⚠️ يرجى إدخال عدد أكبر من الصفر:")
             return
         price_per_card = context.user_data.get("price_per_card", 0)
         total_price = quantity * price_per_card
@@ -323,4 +323,4 @@ def main():
     app.run_polling(close_loop=False)
 
 if __name__ == '__main__':
-    main()
+    main() 
