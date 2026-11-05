@@ -1,4 +1,5 @@
 import os
+import threading
 from flask import Flask
 from telegram import InlineKeyboardButton, InlineKeyboardMarkup, Update
 from telegram.ext import (
@@ -19,6 +20,10 @@ app_web = Flask(__name__)
 @app_web.route('/')
 def home():
     return "Bot is running 24/7!"
+
+def run_flask():
+    port = int(os.environ.get("PORT", 10000))
+    app_web.run(host="0.0.0.0", port=port)
 
 # 2. دوال بوت التليجرام
 async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
@@ -272,15 +277,16 @@ async def message_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
         context.user_data.clear()
 
 if __name__ == '__main__':
-    # 3. تشغيل فلاسك كعملية أساسية على البورت المطلوب في رندر
-    port = int(os.environ.get("PORT", 10000))
-    
-    # ملاحظة: على رندر المجاني، سنشغل البوت مباشرة بطريقة الـ Polling البسيطة
-    # (إذا أردت استقراراً تاماً، تشغيل الـ Bot مباشرة يغني عن تعارض خيوط المعالجة)
+    # 3. تشغيل فلاسك في خيط منفصل (Thread) ليبقى البورت مفتوحاً ومستجيباً على رندر
+    flask_thread = threading.Thread(target=run_flask)
+    flask_thread.daemon = True
+    flask_thread.start()
+
+    # 4. تشغيل بوت التليجرام
     application = Application.builder().token(TOKEN).build()
     application.add_handler(CommandHandler("start", start))
     application.add_handler(CallbackQueryHandler(button_handler))
     application.add_handler(MessageHandler(filters.PHOTO | filters.LOCATION | filters.TEXT & ~filters.COMMAND, message_handler))
     
-    print("🤖 البوت يعمل الآن...")
+    print("🤖 البوت وسيرفر فلاسك يعملان الآن بنجاح...")
     application.run_polling(allowed_updates=Update.ALL_TYPES)
